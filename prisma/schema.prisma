@@ -18,7 +18,7 @@ model GC {
   avatar String?
   tribe  String
 
-  basketGoal Int @default(0)
+  basketGoal Float @default(0)
   clothesGoal Int @default(0)
 
   goals      Goal[]
@@ -31,7 +31,7 @@ model Goal {
   id          String   @id @default(uuid())
   gcId        String?
   tribe       String?
-  basketGoal  Int      @default(0)
+  basketGoal  Float    @default(0)
   clothesGoal Int      @default(0)
   deadline    DateTime
   isActive    Boolean  @default(true)
@@ -49,7 +49,7 @@ model Delivery {
   memberId    String
   gcId        String
   type        DeliveryType
-  quantity    Int          @default(1)
+  quantity    Float        @default(0)
   photoUrl    String?
   notes       String?
   deliveredAt DateTime     @default(now())

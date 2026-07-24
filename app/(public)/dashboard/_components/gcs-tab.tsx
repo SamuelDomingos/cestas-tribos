@@ -3,6 +3,11 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ShoppingBag, Shirt, Trophy, CheckCircle2, Users } from "lucide-react"
 import { TRIBE_CONFIG } from "@/lib/utils"
+
+/** Converte centavos em quantidade de cestas (1 cesta = R$ 35 = 3500 centavos) */
+function toBaskets(cents: number) {
+  return Math.floor(cents / 3500)
+}
 import type { PublicGCProgress } from "../_types"
 import { useMemo } from "react"
 
@@ -42,6 +47,8 @@ function GCRankingCard({
   goal: number
   type: "basket" | "clothes"
 }) {
+  const fmtDel = type === "basket" ? toBaskets(delivered) : delivered
+  const fmtGoal = type === "basket" ? toBaskets(goal) : goal
   const style = POSITION_STYLES[position] ?? POSITION_STYLES[POSITION_STYLES.length - 1]
   const barColor = type === "basket" ? "bg-primary" : "bg-emerald-500"
   const config = TRIBE_CONFIG[gc.tribe]
@@ -68,7 +75,7 @@ function GCRankingCard({
             )}
           </div>
           <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
-            <span>{delivered}/{goal}</span>
+            <span>{fmtDel}/{fmtGoal}</span>
             <span className="font-medium tabular-nums">{pct}%</span>
           </div>
           <Bar pct={pct} color={barColor} />
@@ -121,7 +128,7 @@ function GCListItem({ gc }: { gc: PublicGCProgress }) {
               <div className="flex items-center justify-between text-[11px] text-muted-foreground">
                 <span className="flex items-center gap-1"><ShoppingBag className="size-3" /> Cestas</span>
                 <span className={basketComplete ? "font-bold text-amber-600 dark:text-amber-400" : ""}>
-                  {gc.basketDel}/{gc.basketGoal} ({basketPct}%)
+                  {toBaskets(gc.basketDel)} / {toBaskets(gc.basketGoal)} ({basketPct}%)
                 </span>
               </div>
               <Bar

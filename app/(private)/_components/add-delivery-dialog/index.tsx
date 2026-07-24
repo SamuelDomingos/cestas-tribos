@@ -14,7 +14,7 @@ import {
 import {
   Field, FieldError, FieldGroup, FieldLabel,
 } from "@/components/ui/field"
-import { PlusCircle, ShoppingBag, Shirt, Loader2 } from "lucide-react"
+import { PlusCircle, ShoppingBag, Shirt, Loader2, Banknote } from "lucide-react"
 import { useAddDelivery } from "./use-add-delivery"
 
 export function AddDeliveryDialog() {
@@ -85,26 +85,62 @@ export function AddDeliveryDialog() {
                 )}
               />
 
-              {/* Quantidade */}
+              {/* Quantidade / Valor */}
               <Controller
                 name="quantity"
                 control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="quantity">Quantidade</FieldLabel>
-                    <Input
-                      id="quantity"
-                      type="number"
-                      min={1}
-                      value={field.value}
-                      onChange={(e) => field.onChange(Number(e.target.value))}
-                      aria-invalid={fieldState.invalid}
-                    />
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
-                  </Field>
-                )}
+                render={({ field, fieldState }) => {
+                  const deliveryType = form.watch("type")
+                  const isBasket = deliveryType === "BASKET"
+
+                  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+                    if (!isBasket) {
+                      field.onChange(Number(e.target.value))
+                      return
+                    }
+                    // Remove tudo que não é dígito
+                    const digits = e.target.value.replace(/\D/g, "")
+                    field.onChange(digits ? Number(digits) : 0)
+                  }
+
+                  // Mostra o valor formatado: centavos → reais
+                  const displayValue = isBasket && field.value > 0
+                    ? (field.value / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2 })
+                    : String(field.value || "")
+
+                  return (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor="quantity">
+                        {isBasket ? "Valor" : "Quantidade"}
+                      </FieldLabel>
+                      <div className="relative">
+                        {isBasket && (
+                          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                            R$
+                          </span>
+                        )}
+                        <Input
+                          id="quantity"
+                          type="text"
+                          inputMode={isBasket ? "numeric" : "numeric"}
+                          value={displayValue}
+                          onChange={handleChange}
+                          placeholder={isBasket ? "0,00" : "1"}
+                          className={isBasket ? "pl-9" : ""}
+                          aria-invalid={fieldState.invalid}
+                        />
+                      </div>
+                      {isBasket && field.value > 0 && (
+                        <span className="text-xs text-muted-foreground">
+                          {field.value.toLocaleString("pt-BR")} centavos
+                        </span>
+                      )}
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  )
+                }}
               />
 
               {/* GC */}

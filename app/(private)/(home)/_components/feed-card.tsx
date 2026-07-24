@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { ShoppingBag, Shirt, CalendarDays, Package } from "lucide-react"
 import Image from "next/image"
 import type { FeedItem } from "../_data/feed"
-import { TRIBE_CONFIG } from "@/lib/utils"
+import { TRIBE_CONFIG, formatBasketValue } from "@/lib/utils"
 
 export function FeedCard({ item }: { item: FeedItem }) {
   const hasPhoto = !!item.photo
@@ -80,12 +80,10 @@ export function FeedCard({ item }: { item: FeedItem }) {
               </span>
               <div className="flex flex-col">
                 <span className="text-xs font-semibold text-foreground">
-                  Doou {item.delivered} cesta{item.delivered !== 1 ? "s" : ""}{" "}
-                  básica{item.delivered !== 1 ? "s" : ""}
+                  Doou {formatBasketValue(item.delivered)} em cestas
                 </span>
                 <span className="text-[10px] text-muted-foreground">
-                  {item.totalDeliveredBaskets} entregue
-                  {item.totalDeliveredBaskets !== 1 ? "s" : ""} no total
+                  {formatBasketValue(item.totalDeliveredBaskets)} no total
                 </span>
               </div>
             </>
@@ -125,15 +123,13 @@ export function FeedCard({ item }: { item: FeedItem }) {
                     className={`text-2xl font-bold tabular-nums ${
                       remainingBaskets === 0
                         ? "text-primary"
-                        : remainingBaskets <= 3
-                          ? "text-amber-500"
-                          : "text-foreground"
+                        : "text-foreground"
                     }`}
                   >
-                    {remainingBaskets}
+                    {formatBasketValue(remainingBaskets)}
                   </span>
                   <span className="text-[10px] text-muted-foreground">
-                    {remainingBaskets === 1 ? "restante" : "restantes"}
+                    restante
                   </span>
                 </div>
                 <div className="relative mt-1 h-1.5 w-full overflow-hidden rounded-full bg-muted">
@@ -143,7 +139,7 @@ export function FeedCard({ item }: { item: FeedItem }) {
                   />
                 </div>
                 <span className="text-[10px] text-muted-foreground">
-                  {item.totalDeliveredBaskets}/{item.gc.basketGoal}
+                  {formatBasketValue(item.totalDeliveredBaskets)} / {formatBasketValue(item.gc.basketGoal)}
                 </span>
               </div>
             )}

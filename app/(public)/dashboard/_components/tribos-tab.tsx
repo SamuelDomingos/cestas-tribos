@@ -3,6 +3,11 @@
 import Image from "next/image"
 import { ShoppingBag, Shirt, Trophy } from "lucide-react"
 import { TRIBE_CONFIG } from "@/lib/utils"
+
+/** Converte centavos em quantidade de cestas (1 cesta = R$ 35 = 3500 centavos) */
+function toBaskets(cents: number) {
+  return Math.floor(cents / 3500)
+}
 import type { PublicTribeProgress } from "../_types"
 
 interface TribosTabProps {
@@ -62,7 +67,7 @@ function RankingCard({
 
           <div className="mt-2">
             <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span>{delivered}/{goal}</span>
+              <span>{type === "basket" ? `${toBaskets(delivered)} / ${toBaskets(goal)}` : `${delivered}/${goal}`}</span>
               <span className="font-medium tabular-nums">{pct}%</span>
             </div>
             <div className="mt-0.5 h-2 w-full overflow-hidden bg-muted">

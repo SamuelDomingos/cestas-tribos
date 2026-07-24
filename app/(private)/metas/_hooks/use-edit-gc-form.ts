@@ -34,6 +34,7 @@ export function useEditGCForm({ gc, open, onOpenChange }: UseEditGCFormProps) {
         name: gc.name,
         tribe: gc.tribe,
         avatar: gc.avatar ?? "",
+        // Já armazenado em centavos no banco
         basketGoal: gc.basketGoal ?? gc.goals?.[0]?.basketGoal ?? 0,
         clothesGoal: gc.clothesGoal ?? gc.goals?.[0]?.clothesGoal ?? 0,
       })
@@ -47,6 +48,7 @@ export function useEditGCForm({ gc, open, onOpenChange }: UseEditGCFormProps) {
         name: data.name,
         tribo: data.tribe,
         avatar: data.avatar || null,
+        // Já em centavos
         basketGoal: data.basketGoal,
         clothesGoal: data.clothesGoal,
       },

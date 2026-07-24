@@ -2,6 +2,11 @@
 
 import { ShoppingBag, Shirt, CheckCircle2 } from "lucide-react"
 
+/** Converte centavos em quantidade de cestas (1 cesta = R$ 35 = 3500 centavos) */
+function toBaskets(cents: number) {
+  return Math.floor(cents / 3500)
+}
+
 interface MetasTabProps {
   basketDel: number
   basketGoal: number
@@ -30,8 +35,8 @@ export function MetasTab({ basketDel, basketGoal, clothesDel, clothesGoal, pctBa
         </div>
 
         <div className="mb-2 flex items-baseline gap-2">
-          <span className="text-4xl font-bold tabular-nums">{basketDel}</span>
-          <span className="text-sm text-muted-foreground">/ {basketGoal}</span>
+          <span className="text-4xl font-bold tabular-nums">{toBaskets(basketDel)}</span>
+          <span className="text-sm text-muted-foreground">/ {toBaskets(basketGoal)}</span>
         </div>
 
         <div className="mb-2">
@@ -46,7 +51,7 @@ export function MetasTab({ basketDel, basketGoal, clothesDel, clothesGoal, pctBa
 
         {faltaBasket > 0 ? (
           <p className="mt-3 text-sm font-medium text-destructive">
-            Faltam {faltaBasket} {faltaBasket === 1 ? "cesta" : "cestas"}
+            Faltam {toBaskets(faltaBasket)} {toBaskets(faltaBasket) === 1 ? "cesta" : "cestas"}
           </p>
         ) : (
           <p className="mt-3 flex items-center gap-1.5 text-sm font-medium text-emerald-600 dark:text-emerald-500">

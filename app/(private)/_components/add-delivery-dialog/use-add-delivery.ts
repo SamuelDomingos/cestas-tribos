@@ -40,7 +40,7 @@ export function useAddDelivery(): UseAddDeliveryReturn {
     resolver: zodResolver(deliverySchema),
     defaultValues: {
       type: "BASKET",
-      quantity: 1,
+      quantity: 3500,
       gcId: "",
       notes: "",
     },
@@ -52,7 +52,7 @@ export function useAddDelivery(): UseAddDeliveryReturn {
 
     form.reset({
       type: "BASKET",
-      quantity: 1,
+      quantity: 3500,
       gcId: "",
       notes: "",
     })

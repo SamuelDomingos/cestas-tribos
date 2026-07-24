@@ -6,7 +6,7 @@ import { ShoppingBag, Shirt, CheckCircle2 } from "lucide-react"
 import { EditGCDialog } from "./edit-gc-dialog"
 import { calcStats } from "../_data/utils"
 import type { GCData } from "../_data/types"
-import { TRIBE_CONFIG } from "@/lib/utils"
+import { TRIBE_CONFIG, formatBasketValue } from "@/lib/utils"
 
 export function GCCard({ gc, isAdmin }: { gc: GCData; isAdmin: boolean }) {
   const c = calcStats(gc)
@@ -40,12 +40,12 @@ export function GCCard({ gc, isAdmin }: { gc: GCData; isAdmin: boolean }) {
           <div className="rounded-lg bg-muted/30 p-3">
             <span className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground"><ShoppingBag className="size-3" /> Cestas</span>
             <div className="mt-1 space-y-0.5">
-              <p className="text-lg font-bold tabular-nums">{c.basketDel}</p>
+              <p className="text-lg font-bold tabular-nums">{formatBasketValue(c.basketDel)}</p>
               <p className="text-xs text-muted-foreground">
-                Meta: <span className="font-medium text-foreground">{c.basketGoal}</span>
+                Meta: <span className="font-medium text-foreground">{formatBasketValue(c.basketGoal)}</span>
               </p>
               {faltaBasket > 0 ? (
-                <p className="text-xs font-medium text-destructive">Falta {faltaBasket}</p>
+                <p className="text-xs font-medium text-destructive">Falta {formatBasketValue(faltaBasket)}</p>
               ) : (
                 <p className="flex items-center gap-1 text-xs font-medium"><CheckCircle2 className="size-3.5" /> Completa</p>
               )}

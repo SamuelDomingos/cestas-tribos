@@ -102,22 +102,34 @@ export function EditGCDialog({ gc }: { gc: GCOutput }) {
               <Controller
                 name="basketGoal"
                 control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="basketGoal">Meta de Cestas</FieldLabel>
-                    <Input
-                      id="basketGoal"
-                      type="number"
-                      min={0}
-                      value={field.value}
-                      onChange={(e) => field.onChange(Number(e.target.value))}
-                      aria-invalid={fieldState.invalid}
-                    />
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
-                  </Field>
-                )}
+                render={({ field, fieldState }) => {
+                  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+                    const digits = e.target.value.replace(/\D/g, "")
+                    field.onChange(digits ? Number(digits) : 0)
+                  }
+                  const displayValue = field.value > 0
+                    ? (field.value / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2 })
+                    : String(field.value || "")
+                  return (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor="basketGoal">Meta <span className="text-muted-foreground">(R$)</span></FieldLabel>
+                      <div className="relative">
+                        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">R$</span>
+                        <Input
+                          id="basketGoal"
+                          type="text"
+                          inputMode="numeric"
+                          value={displayValue}
+                          onChange={handleChange}
+                          placeholder="0,00"
+                          className="pl-9"
+                          aria-invalid={fieldState.invalid}
+                        />
+                      </div>
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                    </Field>
+                  )
+                }}
               />
               <Controller
                 name="clothesGoal"

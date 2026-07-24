@@ -21,7 +21,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
-import { TRIBE_CONFIG, TRIBE_ORDER } from "@/lib/utils"
+import { TRIBE_CONFIG, TRIBE_ORDER, formatBasketValue } from "@/lib/utils"
 import { ShoppingBag, Shirt } from "lucide-react"
 import type { GoalsAggregateOutput } from "@/lib/api"
 
@@ -186,8 +186,8 @@ export function TribeCharts({ data }: TribeChartsProps) {
                     </span>
                   </div>
                   <span className="text-xs tabular-nums text-muted-foreground">
-                    {t!.basketDel}
-                    <span className="text-muted-foreground/50"> / {t!.basketGoal}</span>
+                    {formatBasketValue(t!.basketDel)}
+                    <span className="text-muted-foreground/50"> / {formatBasketValue(t!.basketGoal)}</span>
                     <span className="ml-1.5 font-medium text-foreground">
                       ({pct}%)
                     </span>

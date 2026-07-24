@@ -2,7 +2,7 @@
 
 import Image from "next/image"
 import { ShoppingBag, Shirt, CheckCircle2 } from "lucide-react"
-import { TRIBE_CONFIG } from "@/lib/utils"
+import { TRIBE_CONFIG, formatBasketValue } from "@/lib/utils"
 import { GCCard } from "./gc-card"
 import { calcStats, sumStats } from "../_data/utils"
 import type { GCData } from "../_data/types"
@@ -37,11 +37,11 @@ export function TribeSection({ tribeName, gcs, isAdmin }: {
         <div className="rounded-lg border p-3">
           <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"><ShoppingBag className="size-3.5" /> Cestas</span>
           <div className="mt-1 flex items-baseline gap-2">
-            <span className="text-2xl font-bold tabular-nums">{totals.basketDel}</span>
-            <span className="text-sm text-muted-foreground">/ {totals.basketGoal}</span>
+            <span className="text-2xl font-bold tabular-nums">{formatBasketValue(totals.basketDel)}</span>
+            <span className="text-sm text-muted-foreground">/ {formatBasketValue(totals.basketGoal)}</span>
           </div>
           {faltaBasket > 0 ? (
-            <p className="text-xs font-medium text-destructive">Falta {faltaBasket}</p>
+            <p className="text-xs font-medium text-destructive">Falta {formatBasketValue(faltaBasket)}</p>
           ) : (
             <p className="flex items-center gap-1 text-xs font-medium text-primary"><CheckCircle2 className="size-3.5" /> Completa</p>
           )}

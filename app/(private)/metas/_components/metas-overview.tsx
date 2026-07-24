@@ -2,6 +2,7 @@
 
 import { Card, CardContent } from "@/components/ui/card"
 import { Trophy, ShoppingBag, Shirt, CheckCircle2 } from "lucide-react"
+import { formatBasketValue } from "@/lib/utils"
 import type { GCStats } from "../_data/types"
 
 interface Props {
@@ -23,11 +24,11 @@ export function MetasOverview({ totals }: Props) {
           <div className="rounded-lg bg-background/60 p-4">
             <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"><ShoppingBag className="size-3.5" /> Cestas</span>
             <div className="mt-1 flex items-baseline gap-2">
-              <span className="text-3xl font-bold tabular-nums">{totals.basketDel}</span>
-              <span className="text-sm text-muted-foreground">/ {totals.basketGoal}</span>
+              <span className="text-3xl font-bold tabular-nums">{formatBasketValue(totals.basketDel)}</span>
+              <span className="text-sm text-muted-foreground">/ {formatBasketValue(totals.basketGoal)}</span>
             </div>
             {faltaBasket > 0 ? (
-              <p className="mt-1 text-xs font-medium text-destructive">Falta {faltaBasket} cestas</p>
+              <p className="mt-1 text-xs font-medium text-destructive">Falta {formatBasketValue(faltaBasket)}</p>
             ) : (
               <p className="mt-1 flex items-center gap-1 text-xs font-medium"><CheckCircle2 className="size-3.5 text-primary" /> Todas completaram cestas!</p>
             )}

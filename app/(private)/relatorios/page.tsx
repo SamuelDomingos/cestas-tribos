@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label"
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select"
-import { TRIBE_CONFIG } from "@/lib/utils"
+import { TRIBE_CONFIG, formatBasketValue } from "@/lib/utils"
 import type { DeliveryOutput } from "@/lib/api/types/gcs.types"
 import JSZip from "jszip"
 import { saveAs } from "file-saver"
@@ -56,7 +56,7 @@ function DeliveryPhotoCard({
             ) : (
               <Shirt className="size-3.5 text-emerald-600" />
             )}
-            {delivery.type === "BASKET" ? "Cesta" : "Roupa"} x{delivery.quantity}
+            {delivery.type === "BASKET" ? formatBasketValue(delivery.quantity) : `Roupa x${delivery.quantity}`}
           </div>
           <div className="text-xs text-muted-foreground">
             {gcName} — {tribeName}
@@ -210,7 +210,7 @@ export default function RelatoriosPage() {
           </span>
           <span className="flex items-center gap-1 font-medium">
             <ShoppingBag className="size-3.5 text-primary" />
-            {summary.baskets} {summary.baskets === 1 ? "cesta" : "cestas"}
+            {formatBasketValue(summary.baskets)}
           </span>
           <span className="flex items-center gap-1 font-medium">
             <Shirt className="size-3.5 text-emerald-600" />
@@ -299,7 +299,7 @@ export default function RelatoriosPage() {
                     <Shirt className="size-3.5 text-emerald-600 shrink-0" />
                   )}
                   <span className="font-medium">
-                    {d.type === "BASKET" ? "Cesta" : "Roupa"} x{d.quantity}
+                    {d.type === "BASKET" ? formatBasketValue(d.quantity) : `Roupa x${d.quantity}`}
                   </span>
                   <span className="text-muted-foreground">
                     {d.gc?.name ?? "—"} ({TRIBE_CONFIG[d.gc?.tribe ?? ""]?.name ?? d.gc?.tribe ?? "—"})
