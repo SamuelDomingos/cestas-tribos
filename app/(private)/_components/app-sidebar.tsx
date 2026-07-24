@@ -9,7 +9,7 @@ import {
   SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
-import { Home, Target, Users } from "lucide-react"
+import { Home, Target, FileText, Users } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { AddDeliveryDialog } from "./add-delivery-dialog"
 import { ModeToggle } from "@/components/modeToggle"
@@ -24,6 +24,7 @@ const TRIBE_IMAGES: Record<string, string> = {
 const mainLinks = [
   { href: "/", label: "Home", icon: Home },
   { href: "/metas", label: "Metas", icon: Target },
+  { href: "/relatorios", label: "Relatórios", icon: FileText },
 ]
 
 const adminLinks = [

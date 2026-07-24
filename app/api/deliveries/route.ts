@@ -5,19 +5,34 @@ export async function GET(request: NextRequest) {
   try {
     const gcId = request.nextUrl.searchParams.get("gcId")
     const tribe = request.nextUrl.searchParams.get("tribe")
+    const startDate = request.nextUrl.searchParams.get("startDate")
+    const endDate = request.nextUrl.searchParams.get("endDate")
+    const limitParam = request.nextUrl.searchParams.get("limit")
+    const isReport = request.nextUrl.searchParams.get("report") === "true"
     const supabase = createServiceClient()
 
     let query = supabase
       .from("deliveries")
       .select("*, gc:gcs(id, name, tribe, avatar, basketGoal, clothesGoal)")
       .order("deliveredAt", { ascending: false })
-      .limit(50)
+
+    // Limite padrão 50, exceto para relatórios
+    if (!isReport) {
+      const limit = limitParam ? parseInt(limitParam, 10) : 50
+      if (!isNaN(limit)) query = query.limit(limit)
+    }
 
     if (gcId) query = query.eq("gcId", gcId)
     if (tribe) {
       const { data: gcs } = await supabase.from("gcs").select("id").eq("tribe", tribe)
       const ids = gcs?.map(g => g.id) || []
       query = query.in("gcId", ids)
+    }
+    if (startDate) {
+      query = query.gte("deliveredAt", new Date(startDate).toISOString())
+    }
+    if (endDate) {
+      query = query.lte("deliveredAt", new Date(endDate + "T23:59:59").toISOString())
     }
 
     const { data, error } = await query

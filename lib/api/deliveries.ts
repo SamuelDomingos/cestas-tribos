@@ -6,15 +6,21 @@ import { createClient } from "@/lib/supabase/client"
 import type { DeliveryOutput, DeliveryCreateInput } from "@/lib/api/types/gcs.types"
 
 /**
- * Lista entregas, opcionalmente filtradas por GC ou tribo.
+ * Lista entregas, opcionalmente filtradas por GC, tribo ou período.
  */
 export async function fetchDeliveries(opts?: {
   gcId?: string
   tribe?: string
+  startDate?: string
+  endDate?: string
+  report?: boolean
 }): Promise<DeliveryOutput[]> {
   const params = new URLSearchParams()
   if (opts?.gcId) params.set("gcId", opts.gcId)
   if (opts?.tribe) params.set("tribe", opts.tribe)
+  if (opts?.startDate) params.set("startDate", opts.startDate)
+  if (opts?.endDate) params.set("endDate", opts.endDate)
+  if (opts?.report) params.set("report", "true")
   const qs = params.toString()
 
   const res = await fetch(`/api/deliveries${qs ? `?${qs}` : ""}`)
