@@ -1,47 +1,39 @@
 "use client"
 
-import { Moon, Sun } from "lucide-react";
-import { useTheme } from "next-themes";
-import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { Moon, Sun } from "lucide-react"
+import { useTheme } from "next-themes"
+
+import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 export function ModeToggle() {
-  const { setTheme } = useTheme();
-  const [open, setOpen] = useState(false);
+  const { setTheme } = useTheme()
 
   return (
-    <div className="relative">
-      <Button
-        variant="outline"
-        size="icon"
-        onClick={() => setOpen(!open)}
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={<Button variant="outline" size="icon" />}
       >
         <Sun className="h-[1.2rem] w-[1.2rem] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
         <Moon className="absolute h-[1.2rem] w-[1.2rem] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
-        <span className="sr-only">Toggle theme</span>
-      </Button>
-      {open && (
-        <div className="absolute right-0 top-full z-50 mt-1 w-32 rounded-lg border bg-popover p-1 shadow-md">
-          <button
-            className="flex w-full items-center rounded-md px-3 py-1.5 text-xs hover:bg-accent"
-            onClick={() => { setTheme("light"); setOpen(false); }}
-          >
-            Claro
-          </button>
-          <button
-            className="flex w-full items-center rounded-md px-3 py-1.5 text-xs hover:bg-accent"
-            onClick={() => { setTheme("dark"); setOpen(false); }}
-          >
-            Escuro
-          </button>
-          <button
-            className="flex w-full items-center rounded-md px-3 py-1.5 text-xs hover:bg-accent"
-            onClick={() => { setTheme("system"); setOpen(false); }}
-          >
-            Sistema
-          </button>
-        </div>
-      )}
-    </div>
-  );
+        <span className="sr-only">Modo de tema</span>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="rounded" align="end">
+        <DropdownMenuItem onClick={() => setTheme("light")}>
+          Claro
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme("dark")}>
+          Escuro
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme("system")}>
+          Sistema
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
 }
