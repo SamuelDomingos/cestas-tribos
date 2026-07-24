@@ -1,7 +1,12 @@
-import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
+import {
+  SidebarProvider,
+  SidebarInset,
+  SidebarTrigger,
+} from "@/components/ui/sidebar"
 import { AppSidebar } from "./_components/app-sidebar"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { ModeToggle } from "@/components/modeToggle"
+import { AddDeliveryDialog } from "./_components/add-delivery-dialog"
 
 export default function PrivateLayout({
   children,
@@ -21,6 +26,10 @@ export default function PrivateLayout({
         </div>
         <ScrollArea className="h-full">
           {children}
+
+          <div className="fixed right-6 bottom-6 z-50 md:hidden">
+            <AddDeliveryDialog />
+          </div>
         </ScrollArea>
       </SidebarInset>
     </SidebarProvider>

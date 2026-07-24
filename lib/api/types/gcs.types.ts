@@ -73,7 +73,11 @@ export interface DeliveryOutput {
   notes: string | null
   deliveredAt: string
   createdAt: string
-  gc: Pick<GCOutput, "id" | "name" | "tribe"> | null
+  gc: Pick<
+    GCOutput,
+    "id" | "name" | "tribe" | "avatar" | "basketGoal" | "clothesGoal"
+  > | null
+  memberName?: string
 }
 
 export interface DeliveryCreateInput {

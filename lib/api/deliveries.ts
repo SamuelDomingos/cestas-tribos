@@ -2,6 +2,7 @@
  * API client para o recurso de entregas.
  */
 
+import { createClient } from "@/lib/supabase/client"
 import type { DeliveryOutput, DeliveryCreateInput } from "@/lib/api/types/gcs.types"
 
 /**
@@ -43,4 +44,26 @@ export async function createDelivery(input: DeliveryCreateInput): Promise<Delive
   }
 
   return json.data
+}
+
+/**
+ * Faz upload de uma foto para o bucket "deliveries" no Supabase Storage.
+ * Retorna a URL pública ou null em caso de erro.
+ */
+export async function uploadDeliveryPhoto(file: File): Promise<string | null> {
+  const supabase = createClient()
+  const ext = file.name.split(".").pop()
+  const fileName = `deliveries/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+
+  const { data, error } = await supabase.storage
+    .from("deliveries")
+    .upload(fileName, file, { upsert: false })
+
+  if (error) {
+    console.error("Erro upload:", error)
+    return null
+  }
+
+  const { data: urlData } = supabase.storage.from("deliveries").getPublicUrl(data.path)
+  return urlData?.publicUrl ?? null
 }

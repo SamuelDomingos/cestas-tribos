@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from("deliveries")
-      .select("*, gc:gcs(id, name, tribe)")
+      .select("*, gc:gcs(id, name, tribe, avatar, basketGoal, clothesGoal)")
       .order("deliveredAt", { ascending: false })
       .limit(50)
 
@@ -40,6 +40,7 @@ export async function POST(request: NextRequest) {
     const { data, error } = await supabase
       .from("deliveries")
       .insert({
+        id: crypto.randomUUID(),
         memberId: body.memberId,
         gcId: body.gcId,
         type: body.type,
@@ -47,7 +48,7 @@ export async function POST(request: NextRequest) {
         photoUrl: body.photoUrl || null,
         notes: body.notes || null,
       })
-      .select("*, gc:gcs(id, name, tribe)")
+      .select("*, gc:gcs(id, name, tribe, avatar, basketGoal, clothesGoal)")
       .single()
 
     if (error) return Response.json({ success: false, error: error.message }, { status: 400 })
