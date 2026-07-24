@@ -9,21 +9,16 @@ import {
   SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
-import { Home, Target, Users, SunMoon } from "lucide-react"
+import { Home, Target, Users } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { AddDeliveryDialog } from "./add-delivery-dialog"
 import { ModeToggle } from "@/components/modeToggle"
+import { TRIBE_CONFIG } from "@/lib/utils"
 
 const TRIBE_IMAGES: Record<string, string> = {
   hope: "/tribos/hope.jpeg",
   hazak: "/tribos/hazak.jpeg",
   sent: "/tribos/sent.jpeg",
-}
-
-const TRIBE_NAMES: Record<string, string> = {
-  hope: "Hope",
-  hazak: "Hazak",
-  sent: "Sent",
 }
 
 const mainLinks = [
@@ -45,10 +40,11 @@ export function AppSidebar() {
   })
 
   useEffect(() => {
-    const supabase = createClient()
-    supabase.auth.getUser().then((res: any) => {
-      const meta = res.data?.user?.user_metadata || {}
-      const name = meta.full_name || res.data?.user?.email || "—"
+    ;(async () => {
+      const supabase = createClient()
+      const { data } = await supabase.auth.getUser()
+      const meta = data?.user?.user_metadata ?? {}
+      const name = meta.full_name || data?.user?.email || "—"
       const tribe = meta.tribe || ""
       const role = meta.role || "user"
       setUserData({
@@ -57,11 +53,11 @@ export function AppSidebar() {
         tribe,
         role,
       })
-    })
+    })()
   }, [])
 
   const tribeImg = TRIBE_IMAGES[userData.tribe]
-  const tribeName = TRIBE_NAMES[userData.tribe] || userData.tribe || "Sem tribo"
+  const tribeName = TRIBE_CONFIG[userData.tribe]?.name || userData.tribe || "Sem tribo"
 
   return (
     <Sidebar variant="floating">

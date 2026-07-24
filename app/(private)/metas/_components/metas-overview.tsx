@@ -2,7 +2,7 @@
 
 import { Card, CardContent } from "@/components/ui/card"
 import { Trophy, ShoppingBag, Shirt, CheckCircle2 } from "lucide-react"
-import type { GCStats } from "../_data/hooks"
+import type { GCStats } from "../_data/types"
 
 interface Props {
   totals: GCStats

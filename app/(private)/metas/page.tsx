@@ -4,25 +4,27 @@ import { useEffect, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Plus, Target } from "lucide-react"
-import { useMetas, calcStats, sumStats, TRIBE_ORDER } from "./_data/hooks"
 import { MetasOverview } from "./_components/metas-overview"
 import { TribeSection } from "./_components/tribe-section"
+import { useMetas } from "./_hooks/use-gcs"
+import { calcStats, sumStats } from "./_data/utils"
+import { TRIBE_ORDER } from "@/lib/utils"
 
 export default function MetasPage() {
   const [userRole, setUserRole] = useState<string>("user")
 
   useEffect(() => {
-    const supabase = createClient()
-    supabase.auth.getUser().then((res: any) => {
-      const meta = res.data?.user?.user_metadata || {}
+    ;(async () => {
+      const supabase = createClient()
+      const { data } = await supabase.auth.getUser()
+      const meta = data?.user?.user_metadata ?? {}
       setUserRole((meta.role as string) || "user")
-    })
+    })()
   }, [])
 
   const isAdmin = userRole === "admin"
   const { data: gcs = [], isLoading } = useMetas()
 
-  // Agrupar por tribo na ordem fixa
   const tribesMap = new Map<string, typeof gcs>()
   for (const gc of gcs) {
     const t = gc.tribe || "sem"
@@ -31,7 +33,6 @@ export default function MetasPage() {
   }
   const tribes = TRIBE_ORDER.filter((t) => tribesMap.has(t)).map((t) => ({ name: t, gcs: tribesMap.get(t)! }))
 
-  // Totais gerais
   const totals = sumStats(gcs.map(calcStats))
 
   if (isLoading) {

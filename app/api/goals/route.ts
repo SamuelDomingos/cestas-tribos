@@ -17,13 +17,30 @@ export async function GET(request: NextRequest) {
         return Response.json({ success: false, error: error.message }, { status: 500 })
       }
 
-      const tribesMap = new Map<string, any>()
+      const tribesMap = new Map<string, TribeEntry>()
+      type TribeEntry = {
+        tribe: string
+        gcCount: number
+        basketGoal: number
+        clothesGoal: number
+        basketDel: number
+        clothesDel: number
+        gcs: Array<{
+          id: string
+          name: string
+          avatar: string | null
+          basketGoal: number
+          clothesGoal: number
+          basketDel: number
+          clothesDel: number
+        }>
+      }
       for (const gc of gcs || []) {
         const t = gc.tribe || "Sem tribo"
         if (!tribesMap.has(t)) {
           tribesMap.set(t, { tribe: t, gcCount: 0, basketGoal: 0, clothesGoal: 0, basketDel: 0, clothesDel: 0, gcs: [] })
         }
-        const entry = tribesMap.get(t)
+        const entry = tribesMap.get(t)!
         entry.gcCount++
         const goal = gc.goals?.[0]
         entry.basketGoal += goal?.basketGoal ?? gc.basketGoal ?? 0

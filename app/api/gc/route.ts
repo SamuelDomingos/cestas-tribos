@@ -66,10 +66,14 @@ export async function PUT(request: NextRequest) {
     const formData = await request.formData()
     const name = formData.get("name")?.toString()
     const tribo = formData.get("tribo")?.toString()
+    const basketGoal = formData.get("basketGoal")?.toString()
+    const clothesGoal = formData.get("clothesGoal")?.toString()
 
-    const updates: Record<string, string> = {}
+    const updates: Record<string, string | number> = {}
     if (name) updates.name = name
     if (tribo) updates.tribe = tribo
+    if (basketGoal !== undefined) updates.basketGoal = Number(basketGoal)
+    if (clothesGoal !== undefined) updates.clothesGoal = Number(clothesGoal)
 
     const supabase = createServiceClient()
     const { data, error } = await supabase

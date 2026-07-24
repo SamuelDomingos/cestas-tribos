@@ -6,48 +6,28 @@ import { useQuery } from "@tanstack/react-query"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { FeedCard } from "./_components/feed-card"
 import { AddDeliveryDialog } from "../_components/add-delivery-dialog"
-import { ShoppingBag, Shirt, Plus } from "lucide-react"
-import { Button } from "@/components/ui/button"
-
-interface Delivery {
-  id: string
-  memberId: string
-  gcId: string
-  type: "BASKET" | "CLOTHES"
-  quantity: number
-  photoUrl: string | null
-  notes: string | null
-  deliveredAt: string
-  createdAt: string
-  gc: { id: string; name: string; tribe: string } | null
-}
-
-async function fetchDeliveries(tribe?: string): Promise<Delivery[]> {
-  const params = tribe ? `?tribe=${tribe}` : ""
-  const res = await fetch(`/api/deliveries${params}`)
-  const json = await res.json()
-  if (!json.success) throw new Error(json.error)
-  return json.data
-}
+import { ShoppingBag } from "lucide-react"
+import { fetchDeliveries } from "@/lib/api"
 
 export default function HomeFeed() {
   const [userTribe, setUserTribe] = useState("")
   const [userRole, setUserRole] = useState("user")
 
   useEffect(() => {
-    const supabase = createClient()
-    supabase.auth.getUser().then((res: any) => {
-      const meta = res.data?.user?.user_metadata || {}
+    ;(async () => {
+      const supabase = createClient()
+      const { data } = await supabase.auth.getUser()
+      const meta = data?.user?.user_metadata ?? {}
       setUserTribe((meta.tribe as string) || "")
       setUserRole((meta.role as string) || "user")
-    })
+    })()
   }, [])
 
   const tribeFilter = userRole === "admin" ? undefined : userTribe
 
   const { data: deliveries = [], isLoading } = useQuery({
     queryKey: ["deliveries", tribeFilter],
-    queryFn: () => fetchDeliveries(tribeFilter),
+    queryFn: () => fetchDeliveries({ tribe: tribeFilter }),
     enabled: !!userRole,
   })
 
@@ -79,7 +59,7 @@ export default function HomeFeed() {
               Nenhuma entrega registrada ainda.
             </p>
             <p className="text-center text-xs">
-              Use o botão "Adicionar Entrega" no menu lateral.
+              Use o botão &ldquo;Adicionar Entrega&rdquo; no menu lateral.
             </p>
           </div>
         ) : (

@@ -1,12 +1,7 @@
 import { NextRequest } from "next/server"
 import { createServiceClient } from "@/lib/supabase/server"
 import { apiSuccess, apiError } from "@/lib/api/response"
-
-const TRIBE_NAMES: Record<string, string> = {
-  hope: "Hope",
-  hazak: "Hazak",
-  sent: "Sent",
-}
+import { TRIBE_CONFIG } from "@/lib/utils"
 
 function formatUser(user: { id: string; email?: string; user_metadata?: Record<string, unknown>; created_at: string }) {
   const meta = user.user_metadata || {}
@@ -16,7 +11,7 @@ function formatUser(user: { id: string; email?: string; user_metadata?: Record<s
     name: meta.full_name ?? "—",
     role: meta.role ?? "user",
     tribe: meta.tribe ?? "",
-    tribeName: TRIBE_NAMES[meta.tribe as string] ?? "—",
+    tribeName: TRIBE_CONFIG[meta.tribe as string]?.name ?? "—",
     createdAt: user.created_at,
   }
 }
@@ -35,7 +30,7 @@ export async function GET(
       return apiError("Usuário não encontrado", 404)
     }
 
-    return apiSuccess({ user: formatUser(data.user as any) })
+    return apiSuccess({ user: formatUser(data.user!) })
   } catch (error) {
     console.error("GET /api/users/[id] error:", error)
     return apiError("Erro interno do servidor", 500)
@@ -65,7 +60,7 @@ export async function PUT(
       return apiError(error.message, 400)
     }
 
-    return apiSuccess({ user: formatUser(data.user as any) })
+    return apiSuccess({ user: formatUser(data.user!) })
   } catch (error) {
     console.error("PUT /api/users/[id] error:", error)
     return apiError("Erro interno do servidor", 500)

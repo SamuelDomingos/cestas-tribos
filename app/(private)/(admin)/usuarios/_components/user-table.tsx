@@ -53,7 +53,7 @@ export function UserTable({
       <div className="flex flex-col items-center justify-center gap-2 rounded-none border p-8 text-xs text-muted-foreground">
         <Users className="size-8" />
         <p>Nenhum usuário cadastrado ainda.</p>
-        <p>Clique em "Novo Usuário" para começar.</p>
+        <p>Clique em &ldquo;Novo Usuário&rdquo; para começar.</p>
       </div>
     )
   }

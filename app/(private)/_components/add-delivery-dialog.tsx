@@ -14,19 +14,14 @@ import {
 import { PlusCircle, ShoppingBag, Shirt, Loader2 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { toast } from "sonner"
-
-interface GC {
-  id: string
-  name: string
-  tribe: string
-}
+import { fetchGCs, createDelivery } from "@/lib/api"
+import type { GCOutput } from "@/lib/api"
 
 export function AddDeliveryDialog() {
   const [open, setOpen] = useState(false)
   const [userTribe, setUserTribe] = useState("")
   const [userRole, setUserRole] = useState("user")
-  const [gcs, setGcs] = useState<GC[]>([])
-  const [loading, setLoading] = useState(false)
+  const [gcs, setGcs] = useState<GCOutput[]>([])
   const [saving, setSaving] = useState(false)
 
   // Form fields
@@ -34,33 +29,23 @@ export function AddDeliveryDialog() {
   const [quantity, setQuantity] = useState("1")
   const [gcId, setGcId] = useState("")
   const [photoFile, setPhotoFile] = useState<File | null>(null)
-  const [uploading, setUploading] = useState(false)
   const [notes, setNotes] = useState("")
 
   // Carrega dados do usuario e GCs ao abrir
   useEffect(() => {
     if (!open) return
 
-    const supabase = createClient()
-    supabase.auth.getUser().then((res: any) => {
-      const meta = res.data?.user?.user_metadata || {}
-      setUserTribe(meta.tribe || "")
-      setUserRole(meta.role || "user")
-    })
+    ;(async () => {
+      const supabase = createClient()
+      const { data } = await supabase.auth.getUser()
+      const meta = data?.user?.user_metadata ?? {}
+      setUserTribe((meta.tribe as string) || "")
+      setUserRole((meta.role as string) || "user")
+    })()
 
-    setLoading(true)
-    fetch("/api/gc")
-      .then((r) => r.json())
-      .then((data: GC[]) => {
-        // Se for admin, mostra todos. Se não, filtra pela tribo do usuario
-        const role = userRole // pode estar desatualizado, mas usamos o state
-        setGcs(data)
-        setLoading(false)
-      })
-      .catch(() => {
-        toast.error("Erro ao carregar GCs")
-        setLoading(false)
-      })
+    fetchGCs()
+      .then((data) => setGcs(data))
+      .catch(() => toast.error("Erro ao carregar GCs"))
   }, [open])
 
   // Filtra GCs pela tribo do usuario
@@ -106,35 +91,25 @@ export function AddDeliveryDialog() {
       // Upload da foto se tiver
       let photoUrl: string | null = null
       if (photoFile) {
-        setUploading(true)
         photoUrl = await uploadPhoto(photoFile)
-        setUploading(false)
       }
 
-      const res = await fetch("/api/deliveries", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          memberId,
-          gcId,
-          type,
-          quantity: Number(quantity) || 1,
-          photoUrl,
-          notes: notes || null,
-        }),
+      await createDelivery({
+        memberId,
+        gcId,
+        type: type as "BASKET" | "CLOTHES",
+        quantity: Number(quantity) || 1,
+        photoUrl: photoUrl ?? null,
+        notes: notes || null,
       })
-
-      const json = await res.json()
-      if (!json.success) throw new Error(json.error)
 
       toast.success("Entrega registrada com sucesso!")
       setOpen(false)
       resetForm()
-    } catch (e: any) {
-      toast.error(e.message || "Erro ao registrar entrega")
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao registrar entrega")
     } finally {
       setSaving(false)
-      setUploading(false)
     }
   }
 
@@ -205,7 +180,7 @@ export function AddDeliveryDialog() {
             <Label htmlFor="gc">{gcLabel}</Label>
             <Select value={gcId} onValueChange={(v) => setGcId(v ?? "")}>
               <SelectTrigger>
-                <SelectValue placeholder={loading ? "Carregando..." : "Selecione o GC"} />
+                <SelectValue placeholder={gcs.length === 0 ? "Carregando..." : "Selecione o GC"} />
               </SelectTrigger>
               <SelectContent>
                 {filteredGCs.map((gc) => (

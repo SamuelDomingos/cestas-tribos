@@ -4,16 +4,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent } from "@/components/ui/card"
 import { ShoppingBag, Shirt, CheckCircle2 } from "lucide-react"
 import { EditGCDialog } from "./edit-gc-dialog"
-import { calcStats } from "../_data/hooks"
-import type { GCData } from "../_data/hooks"
-import { TRIBE_CONFIG } from "../_data/hooks"
+import { calcStats } from "../_data/utils"
+import type { GCData } from "../_data/types"
+import { TRIBE_CONFIG } from "@/lib/utils"
 
-interface Props {
-  gc: GCData
-  isAdmin: boolean
-}
-
-export function GCCard({ gc, isAdmin }: Props) {
+export function GCCard({ gc, isAdmin }: { gc: GCData; isAdmin: boolean }) {
   const c = calcStats(gc)
   const config = TRIBE_CONFIG[gc.tribe]
   const faltaBasket = Math.max(c.basketGoal - c.basketDel, 0)

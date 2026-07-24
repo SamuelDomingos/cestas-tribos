@@ -1,12 +1,7 @@
 import { NextRequest } from "next/server"
 import { createServiceClient } from "@/lib/supabase/server"
 import { apiSuccess, apiError } from "@/lib/api/response"
-
-const TRIBE_NAMES: Record<string, string> = {
-  hope: "Hope",
-  hazak: "Hazak",
-  sent: "Sent",
-}
+import { TRIBE_CONFIG } from "@/lib/utils"
 
 export async function GET() {
   try {
@@ -27,7 +22,7 @@ export async function GET() {
         name: meta.full_name ?? "—",
         role: meta.role ?? "user",
         tribe: meta.tribe ?? "",
-        tribeName: TRIBE_NAMES[meta.tribe as string] ?? "—",
+        tribeName: TRIBE_CONFIG[meta.tribe as string]?.name ?? "—",
         createdAt: u.created_at,
       }
     })
@@ -83,7 +78,7 @@ export async function POST(request: NextRequest) {
           name: meta.full_name ?? body.name,
           role: meta.role ?? "user",
           tribe: meta.tribe ?? "",
-          tribeName: TRIBE_NAMES[meta.tribe as string] ?? "—",
+          tribeName: TRIBE_CONFIG[meta.tribe as string]?.name ?? "—",
           createdAt: u.created_at,
         },
       },

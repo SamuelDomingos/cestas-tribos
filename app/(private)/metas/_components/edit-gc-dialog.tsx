@@ -1,102 +1,154 @@
 "use client"
 
 import { useState } from "react"
+import { Controller } from "react-hook-form"
 import { Button } from "@/components/ui/button"
 import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog"
+import {
+  Field, FieldError, FieldGroup, FieldLabel,
+} from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select"
 import { Pencil } from "lucide-react"
-import type { GCData } from "../_data/hooks"
-import { TRIBE_CONFIG } from "../_data/hooks"
+import type { GCOutput } from "@/lib/api/types/gcs.types"
+import { TRIBE_CONFIG } from "@/lib/utils"
+import { useEditGCForm } from "../_hooks/use-edit-gc-form"
 
-interface Props {
-  gc: GCData
-}
-
-export function EditGCDialog({ gc }: Props) {
+export function EditGCDialog({ gc }: { gc: GCOutput }) {
   const [open, setOpen] = useState(false)
-  const [name, setName] = useState(gc.name)
-  const [tribe, setTribe] = useState(gc.tribe)
-  const [avatar, setAvatar] = useState(gc.avatar ?? "")
-  const [basketGoal, setBasketGoal] = useState(String(gc.basketGoal ?? gc.goals?.[0]?.basketGoal ?? 0))
-  const [clothesGoal, setClothesGoal] = useState(String(gc.clothesGoal ?? gc.goals?.[0]?.clothesGoal ?? 0))
-  const [saving, setSaving] = useState(false)
-
-  async function handleSave() {
-    setSaving(true)
-    try {
-      const formData = new FormData()
-      formData.append("name", name)
-      formData.append("tribo", tribe)
-      if (avatar) formData.append("avatar", avatar)
-
-      await fetch(`/api/gc?id=${gc.id}`, { method: "PUT", body: formData })
-      setOpen(false)
-      window.location.reload()
-    } catch (e) {
-      console.error(e)
-    } finally {
-      setSaving(false)
-    }
-  }
+  const { form, isPending, onSubmit } = useEditGCForm({ gc, open, onOpenChange: setOpen })
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger render={<Button variant="ghost" size="icon-sm" />}>
         <Pencil className="size-3" />
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Editar GC</DialogTitle>
           <DialogDescription>Altere os dados do GC</DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="name">Nome</Label>
-            <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
-          </div>
+        <form id="edit-gc-form" onSubmit={form.handleSubmit(onSubmit)}>
+          <FieldGroup>
+            {/* Nome */}
+            <Controller
+              name="name"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor="name">Nome</FieldLabel>
+                  <Input
+                    {...field}
+                    id="name"
+                    placeholder="Nome do GC"
+                    autoComplete="off"
+                    aria-invalid={fieldState.invalid}
+                  />
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
+            />
 
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="tribe">Tribo</Label>
-            <Select value={tribe} onValueChange={(v) => setTribe(v ?? "")}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(TRIBE_CONFIG).map(([key, t]) => (
-                  <SelectItem key={key} value={key}>{t.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+            {/* Tribo */}
+            <Controller
+              name="tribe"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor="tribe">Tribo</FieldLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger id="tribe" className="w-full" aria-invalid={fieldState.invalid}>
+                      <SelectValue placeholder="Selecione a tribo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(TRIBE_CONFIG).map(([key, t]) => (
+                        <SelectItem key={key} value={key}>{t.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
+            />
 
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="avatar">URL do Avatar</Label>
-            <Input id="avatar" value={avatar} onChange={(e) => setAvatar(e.target.value)} />
-          </div>
+            {/* Avatar */}
+            <Controller
+              name="avatar"
+              control={form.control}
+              render={({ field }) => (
+                <Field>
+                  <FieldLabel htmlFor="avatar">URL do Avatar</FieldLabel>
+                  <Input
+                    {...field}
+                    id="avatar"
+                    placeholder="https://..."
+                    autoComplete="off"
+                  />
+                </Field>
+              )}
+            />
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="basketGoal">Meta de Cestas</Label>
-              <Input id="basketGoal" type="number" value={basketGoal} onChange={(e) => setBasketGoal(e.target.value)} />
+            {/* Metas */}
+            <div className="grid grid-cols-2 gap-4">
+              <Controller
+                name="basketGoal"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="basketGoal">Meta de Cestas</FieldLabel>
+                    <Input
+                      id="basketGoal"
+                      type="number"
+                      min={0}
+                      value={field.value}
+                      onChange={(e) => field.onChange(Number(e.target.value))}
+                      aria-invalid={fieldState.invalid}
+                    />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+              <Controller
+                name="clothesGoal"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="clothesGoal">Meta de Roupas</FieldLabel>
+                    <Input
+                      id="clothesGoal"
+                      type="number"
+                      min={0}
+                      value={field.value}
+                      onChange={(e) => field.onChange(Number(e.target.value))}
+                      aria-invalid={fieldState.invalid}
+                    />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
             </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="clothesGoal">Meta de Roupas</Label>
-              <Input id="clothesGoal" type="number" value={clothesGoal} onChange={(e) => setClothesGoal(e.target.value)} />
-            </div>
-          </div>
-        </div>
+          </FieldGroup>
+        </form>
 
         <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-          <Button onClick={handleSave} disabled={saving}>
-            {saving ? "Salvando..." : "Salvar"}
+          <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            Cancelar
+          </Button>
+          <Button type="submit" form="edit-gc-form" disabled={isPending}>
+            {isPending ? "Salvando..." : "Salvar"}
           </Button>
         </div>
       </DialogContent>

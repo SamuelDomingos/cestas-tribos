@@ -2,17 +2,16 @@
 
 import Image from "next/image"
 import { ShoppingBag, Shirt, CheckCircle2 } from "lucide-react"
-import { TRIBE_CONFIG, calcStats, sumStats } from "../_data/hooks"
+import { TRIBE_CONFIG } from "@/lib/utils"
 import { GCCard } from "./gc-card"
-import type { GCData } from "../_data/hooks"
+import { calcStats, sumStats } from "../_data/utils"
+import type { GCData } from "../_data/types"
 
-interface Props {
+export function TribeSection({ tribeName, gcs, isAdmin }: {
   tribeName: string
   gcs: GCData[]
   isAdmin: boolean
-}
-
-export function TribeSection({ tribeName, gcs, isAdmin }: Props) {
+}) {
   const config = TRIBE_CONFIG[tribeName]
   const totals = sumStats(gcs.map(calcStats))
   const faltaBasket = Math.max(totals.basketGoal - totals.basketDel, 0)
@@ -61,7 +60,6 @@ export function TribeSection({ tribeName, gcs, isAdmin }: Props) {
         </div>
       </div>
 
-      {/* Grid de GCs */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {gcs.map((gc) => (
           <GCCard key={gc.id} gc={gc} isAdmin={isAdmin} />
