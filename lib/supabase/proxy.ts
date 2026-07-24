@@ -54,9 +54,9 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  if (pathname.startsWith("/admin") && user?.user_metadata?.role !== "admin") {
-    return NextResponse.redirect(new URL("/", request.url))
-  }
+  // if (pathname.startsWith("/admin") && user?.user_metadata?.role !== "admin") {
+  //   return NextResponse.redirect(new URL("/", request.url))
+  // }
 
   if (user && isPublicRoute) {
     const redirect =

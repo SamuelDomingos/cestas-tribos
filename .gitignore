@@ -35,6 +35,11 @@ pnpm-debug.log*
 /prisma/migrations/
 /lib/generated/
 
+# AI agent configs
+/.agents
+/.claude
+/.windsurf
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

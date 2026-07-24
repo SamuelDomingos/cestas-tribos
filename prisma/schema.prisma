@@ -7,88 +7,55 @@ datasource db {
   provider = "postgresql"
 }
 
-// ============================================
-// ENUMS
-// ============================================
-
-enum MemberRole {
-  GC
-  CO_GC
-}
-
 enum DeliveryType {
   BASKET
   CLOTHES
 }
 
-// ============================================
-// MODELS
-// ============================================
+model GC {
+  id     String  @id @default(uuid())
+  name   String  @unique
+  avatar String?
+  tribe  String
 
-/// Tribo / grupo de GCs
-model Tribe {
+  basketGoal Int @default(0)
+  clothesGoal Int @default(0)
+
+  goals      Goal[]
+  deliveries Delivery[]
+
+  @@map("gcs")
+}
+
+model Goal {
   id          String   @id @default(uuid())
-  name        String
-  description String?
-  imageUrl    String?
+  gcId        String?
+  tribe       String?
+  basketGoal  Int      @default(0)
+  clothesGoal Int      @default(0)
+  deadline    DateTime
+  isActive    Boolean  @default(true)
+  createdById String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  members TribeMember[]
-  goals   Goal[]
-
-  @@map("tribes")
-}
-
-/// GC — membro de uma tribo
-/// userId referencia o auth.users do Supabase (sem FK formal)
-model TribeMember {
-  id        String     @id @default(uuid())
-  tribeId   String
-  userId    String
-  role      MemberRole @default(GC)
-  createdAt DateTime   @default(now())
-
-  tribe      Tribe      @relation(fields: [tribeId], references: [id], onDelete: Cascade)
-  deliveries Delivery[]
-  goals      Goal[]
-
-  @@unique([tribeId, userId])
-  @@map("tribe_members")
-}
-
-/// Meta de cestas e roupas atribuída a um GC ou tribo.
-/// Permite histórico: uma nova meta é criada a cada ciclo.
-model Goal {
-  id            String   @id @default(uuid())
-  tribeId       String
-  tribeMemberId String?
-  basketGoal    Int      @default(0)
-  clothesGoal   Int      @default(0)
-  deadline      DateTime
-  isActive      Boolean  @default(true)
-  createdById   String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  tribe       Tribe        @relation(fields: [tribeId], references: [id], onDelete: Cascade)
-  tribeMember TribeMember? @relation(fields: [tribeMemberId], references: [id])
+  gc GC? @relation(fields: [gcId], references: [id])
 
   @@map("goals")
 }
 
-/// Entrega de cesta ou roupa com comprovação por foto.
 model Delivery {
-  id            String        @id @default(uuid())
-  tribeMemberId String
-  type          DeliveryType
-  quantity      Int           @default(1)
-  photoUrl      String?
-  notes         String?
-  deliveredAt   DateTime      @default(now())
-  createdAt     DateTime      @default(now())
+  id          String       @id @default(uuid())
+  memberId    String
+  gcId        String
+  type        DeliveryType
+  quantity    Int          @default(1)
+  photoUrl    String?
+  notes       String?
+  deliveredAt DateTime     @default(now())
+  createdAt   DateTime     @default(now())
 
-  tribeMember TribeMember @relation(fields: [tribeMemberId], references: [id], onDelete: Cascade)
+  gc     GC     @relation(fields: [gcId], references: [id])
 
   @@map("deliveries")
 }
