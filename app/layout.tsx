@@ -14,8 +14,8 @@ const fontMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "GT Contabilidade",
-    template: "%s | GT Contabilidade",
+    default: "Cesta Basica School",
+    template: "%s | Cesta Basica School",
   },
 
   description:

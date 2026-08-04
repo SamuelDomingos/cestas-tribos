@@ -7,14 +7,13 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select"
 import {
   Field, FieldError, FieldGroup, FieldLabel,
 } from "@/components/ui/field"
-import { PlusCircle, ShoppingBag, Shirt, Loader2, Banknote } from "lucide-react"
+import { PlusCircle, ShoppingBag, Shirt, Loader2 } from "lucide-react"
 import { useAddDelivery } from "./use-add-delivery"
 
 export function AddDeliveryDialog() {
@@ -197,28 +196,43 @@ export function AddDeliveryDialog() {
               />
             </FieldGroup>
 
-            {/* Foto (fora do Controller — é File, não texto) */}
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="photo">Foto (opcional)</Label>
-              <Input
-                id="photo"
-                type="file"
-                accept="image/*"
-                onChange={(e) => setPhotoFile(e.target.files?.[0] ?? null)}
-              />
-              {photoPreviewUrl && (
-                <div className="mt-1 overflow-hidden rounded-md border">
-                  <img
-                    src={photoPreviewUrl}
-                    alt="Preview da foto"
-                    className="h-32 w-full object-cover"
+            {/* Foto (obrigatória — validada pelo zod) */}
+            <Controller
+              name="photo"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor="photo">
+                    Foto do comprovante <span className="text-destructive">*</span>
+                  </FieldLabel>
+                  <Input
+                    id="photo"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] ?? null
+                      field.onChange(file)
+                      setPhotoFile(file)
+                    }}
                   />
-                </div>
+                  {photoPreviewUrl && (
+                    <div className="mt-1 overflow-hidden rounded-md border">
+                      <img
+                        src={photoPreviewUrl}
+                        alt="Preview da foto"
+                        className="h-32 w-full object-cover"
+                      />
+                    </div>
+                  )}
+                  {photoFile && (
+                    <span className="text-xs text-muted-foreground">{photoFile.name}</span>
+                  )}
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
               )}
-              {photoFile && (
-                <span className="text-xs text-muted-foreground">{photoFile.name}</span>
-              )}
-            </div>
+            />
 
             {/* Observações */}
             <Controller

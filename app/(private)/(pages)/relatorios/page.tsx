@@ -4,7 +4,7 @@ import { useCallback, useState } from "react"
 import { useReport } from "./_hooks/use-report"
 import {
   ShoppingBag, Shirt, Download, Loader2, FileImage, Calendar,
-  Filter, ChevronDown, ChevronUp, ExternalLink,
+  Filter, ChevronDown, ExternalLink,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -97,7 +97,7 @@ function DeliveryPhotoCard({
 export default function RelatoriosPage() {
   const {
     startDate, setStartDate, endDate, setEndDate,
-    tribeFilter, setTribeFilter, tribes, gcMap,
+    tribeFilter, setTribeFilter, tribes,
     deliveries, photoDeliveries, summary, isLoading,
   } = useReport()
 
@@ -111,9 +111,6 @@ export default function RelatoriosPage() {
       const folder = zip.folder("comprovantes")
       if (!folder) return
 
-      let completed = 0
-      const total = photoDeliveries.length
-
       for (const d of photoDeliveries) {
         if (!d.photoUrl) continue
         try {
@@ -124,23 +121,41 @@ export default function RelatoriosPage() {
           const date = new Date(d.deliveredAt).toISOString().split("T")[0]
           const type = d.type === "BASKET" ? "cesta" : "roupa"
           const ext = blob.type.split("/")[1] || "jpg"
-          const fileName = `${date}_${tribeName}_${gcName}_${type}_${d.quantity}x.${ext}`
+          // Cesta: valor em reais (o campo é armazenado em centavos). Roupa: contagem.
+          const valuePart =
+            d.type === "BASKET"
+              ? formatBasketValue(d.quantity).replace(/\s/g, "")
+              : `${d.quantity}x`
+          // Evita que o JSZip sobrescreva comprovantes com data/tribo/GC/
+          // tipo/valor iguais: se o nome já existe, acrescenta um sufixo
+          // numérico (sem poluir o nome com o id da entrega).
+          const baseName = `${date}_${tribeName}_${gcName}_${type}_${valuePart}`
+          let fileName = `${baseName}.${ext}`
+          let suffix = 1
+          while (folder.file(fileName)) {
+            fileName = `${baseName}_${suffix}.${ext}`
+            suffix++
+          }
           folder.file(fileName, blob)
-        } catch {
-          // Ignora erro em uma foto individual
+        } catch (err) {
+          console.warn("Falha ao baixar comprovante:", d.id, err)
         }
-        completed++
       }
 
       const content = await zip.generateAsync({ type: "blob" })
-      const period = `${startDate}_a_${endDate}`
+      // Nome do arquivo: período + tribo (ou "todas" quando sem filtro).
+      const tribePart =
+        tribeFilter === "all"
+          ? "todas"
+          : (TRIBE_CONFIG[tribeFilter]?.name ?? tribeFilter)
+      const period = `${startDate}_a_${endDate}_${tribePart}`
       saveAs(content, `comprovantes_${period}.zip`)
     } catch (err) {
       console.error("Erro ao gerar ZIP:", err)
     } finally {
       setDownloading(false)
     }
-  }, [photoDeliveries, startDate, endDate])
+  }, [photoDeliveries, startDate, endDate, tribeFilter])
 
   const periodLabel = `${new Date(startDate).toLocaleDateString("pt-BR")} — ${new Date(endDate).toLocaleDateString("pt-BR")}`
 

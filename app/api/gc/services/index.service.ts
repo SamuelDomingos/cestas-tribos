@@ -1,7 +1,7 @@
 import { z } from "zod"
 import { createServiceClient } from "@/lib/supabase/server"
 import { handleAvatarUpload } from "./avatarUpload.service"
-import { editGcSchema } from "@/app/(private)/metas/_schemas/gc.schema"
+import { editGcSchema } from "@/app/(private)/(pages)/metas/_schemas/gc.schema"
 
 export const GCService = {
   async createGC(formData: FormData) {

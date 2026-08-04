@@ -101,11 +101,8 @@ export function useAddDelivery(): UseAddDeliveryReturn {
         return
       }
 
-      // Upload da foto se tiver
-      let photoUrl: string | null = null
-      if (photoFile) {
-        photoUrl = await uploadDeliveryPhoto(photoFile)
-      }
+      // Foto obrigatória — validada pelo schema do formulário
+      const photoUrl = await uploadDeliveryPhoto(data.photo)
 
       await createDelivery({
         memberId,
@@ -124,7 +121,7 @@ export function useAddDelivery(): UseAddDeliveryReturn {
     } finally {
       setSaving(false)
     }
-  }, [photoFile, router])
+  }, [router])
 
   const gcLabel = userRole === "admin" ? "GC (todas tribos)" : `GC (${userTribe})`
 

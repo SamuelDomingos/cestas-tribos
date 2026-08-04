@@ -22,7 +22,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart"
 import { TRIBE_CONFIG, TRIBE_ORDER, formatBasketValue } from "@/lib/utils"
-import { ShoppingBag, Shirt } from "lucide-react"
+import { ShoppingBag, Shirt, Medal, Trophy } from "lucide-react"
 import type { GoalsAggregateOutput } from "@/lib/api"
 
 const TRIBE_COLORS: Record<string, { bar: string; css: string }> = {
@@ -31,6 +31,13 @@ const TRIBE_COLORS: Record<string, { bar: string; css: string }> = {
   hazak: { bar: "#7dd3fc", css: "hsl(199, 95%, 74%)" },    // azul bebê
 }
 
+/** Posições do ranking: ícone do lucide + cor (ouro, prata, bronze). */
+const POSITION_STYLES = [
+  { Icon: Trophy, color: "text-amber-500", label: "1º" },
+  { Icon: Medal, color: "text-slate-400", label: "2º" },
+  { Icon: Medal, color: "text-orange-400", label: "3º" },
+]
+
 interface CustomBarProps {
   x: number
   y: number
@@ -38,10 +45,12 @@ interface CustomBarProps {
   height: number
   fill?: string
   payload?: { tribe: string; entregue: number; meta: number }
+  /** Identificador do gráfico, para IDs de clipPath não colidirem. */
+  chartKey?: string
 }
 
 function CustomBar(props: CustomBarProps) {
-  const { x, y, width, height, payload } = props
+  const { x, y, width, height, payload, chartKey = "chart" } = props
   if (!payload || height <= 0) return null
 
   const tribeConfig = TRIBE_CONFIG[payload.tribe]
@@ -61,7 +70,7 @@ function CustomBar(props: CustomBarProps) {
       {tribeConfig && (
         <g>
           <defs>
-            <clipPath id={`clip-${payload.tribe}`}>
+            <clipPath id={`clip-${chartKey}-${payload.tribe}`}>
               <circle cx={x + width / 2} cy={y - 24} r={18} />
             </clipPath>
           </defs>
@@ -72,8 +81,8 @@ function CustomBar(props: CustomBarProps) {
             y={y - 42}
             width={36}
             height={36}
-            preserveAspectRatio="xMidYMid slice"
-            clipPath={`url(#clip-${payload.tribe})`}
+            preserveAspectRatio="xMidYMid meet"
+            clipPath={`url(#clip-${chartKey}-${payload.tribe})`}
             className="drop-shadow-sm"
           />
         </g>
@@ -93,13 +102,21 @@ export function TribeCharts({ data }: TribeChartsProps) {
     return tribe
   }).filter(Boolean)
 
-  const basketData = sortedTribes.map((t) => ({
+  // Ranking por valor entregue, para exibir 1º, 2º e 3º lugar.
+  const basketRanking = sortedTribes
+    .slice()
+    .sort((a, b) => (b!.basketDel ?? 0) - (a!.basketDel ?? 0))
+  const clothesRanking = sortedTribes
+    .slice()
+    .sort((a, b) => (b!.clothesDel ?? 0) - (a!.clothesDel ?? 0))
+
+  const basketData = basketRanking.map((t) => ({
     tribe: t!.tribe,
     entregue: t!.basketDel,
     meta: t!.basketGoal,
   }))
 
-  const clothesData = sortedTribes.map((t) => ({
+  const clothesData = clothesRanking.map((t) => ({
     tribe: t!.tribe,
     entregue: t!.clothesDel,
     meta: t!.clothesGoal,
@@ -112,7 +129,7 @@ export function TribeCharts({ data }: TribeChartsProps) {
   }
 
   return (
-    <div className="grid grid-cols-2 gap-4 px-4">
+    <div className="grid gap-4 px-4 sm:grid-cols-2">
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-sm">
@@ -149,7 +166,7 @@ export function TribeCharts({ data }: TribeChartsProps) {
               <Bar
                 dataKey="entregue"
                 shape={(props: any) => (
-                  <CustomBar {...props} />
+                  <CustomBar {...props} chartKey="basket" />
                 )}
               />
             </BarChart>
@@ -157,18 +174,28 @@ export function TribeCharts({ data }: TribeChartsProps) {
 
           {/* Legenda com números */}
           <div className="mt-2 space-y-1.5">
-            {sortedTribes.map((t) => {
+            {basketRanking.map((t, i) => {
               const tribeConfig = TRIBE_CONFIG[t!.tribe]
               const color = TRIBE_COLORS[t!.tribe]?.css
               const pct = t!.basketGoal > 0
                 ? Math.round((t!.basketDel / t!.basketGoal) * 100)
                 : 0
+              const pos = POSITION_STYLES[i]
               return (
                 <div
                   key={t!.tribe}
                   className="flex items-center justify-between rounded-md bg-muted/50 px-2.5 py-1.5"
                 >
                   <div className="flex items-center gap-2">
+                    {pos && (
+                      <span
+                        className={`flex shrink-0 items-center gap-0.5 ${pos.color}`}
+                        title={pos.label}
+                      >
+                        <pos.Icon className="size-4" />
+                        <span className="text-[10px] font-bold">{pos.label}</span>
+                      </span>
+                    )}
                     <span
                       className="size-2.5 shrink-0 rounded-full"
                       style={{ backgroundColor: color ?? "var(--color-basket)" }}
@@ -236,7 +263,7 @@ export function TribeCharts({ data }: TribeChartsProps) {
               <Bar
                 dataKey="entregue"
                 shape={(props: any) => (
-                  <CustomBar {...props} />
+                  <CustomBar {...props} chartKey="clothes" />
                 )}
               />
             </BarChart>
@@ -244,18 +271,28 @@ export function TribeCharts({ data }: TribeChartsProps) {
 
           {/* Legenda com números */}
           <div className="mt-2 space-y-1.5">
-            {sortedTribes.map((t) => {
+            {clothesRanking.map((t, i) => {
               const tribeConfig = TRIBE_CONFIG[t!.tribe]
               const color = TRIBE_COLORS[t!.tribe]?.css
               const pct = t!.clothesGoal > 0
                 ? Math.round((t!.clothesDel / t!.clothesGoal) * 100)
                 : 0
+              const pos = POSITION_STYLES[i]
               return (
                 <div
                   key={t!.tribe}
                   className="flex items-center justify-between rounded-md bg-muted/50 px-2.5 py-1.5"
                 >
                   <div className="flex items-center gap-2">
+                    {pos && (
+                      <span
+                        className={`flex shrink-0 items-center gap-0.5 ${pos.color}`}
+                        title={pos.label}
+                      >
+                        <pos.Icon className="size-4" />
+                        <span className="text-[10px] font-bold">{pos.label}</span>
+                      </span>
+                    )}
                     <span
                       className="size-2.5 shrink-0 rounded-full"
                       style={{ backgroundColor: color ?? "var(--color-clothes)" }}
