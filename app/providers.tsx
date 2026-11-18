@@ -25,6 +25,11 @@ export function Providers({ children }: { children: ReactNode }) {
       new QueryClient({
         defaultOptions: {
           queries: {
+            // 30s de frescor global: montagens e focos próximos reutilizam a
+            // resposta; mutações invalidam na hora via invalidateQueries.
+            staleTime: 30_000,
+            // 5 min parado antes de descartar da memória (limpa sem retenção eterna).
+            gcTime: 5 * 60_000,
             retry: 1,
             refetchOnWindowFocus: false,
           },

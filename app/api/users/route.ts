@@ -1,10 +1,23 @@
 import { NextRequest } from "next/server"
 import { createServiceClient } from "@/lib/supabase/server"
 import { apiSuccess, apiError } from "@/lib/api/response"
+import { getSessionUser, getUserRole } from "@/lib/auth"
 import { TRIBE_CONFIG } from "@/lib/utils"
+
+async function requireAdmin() {
+  const user = await getSessionUser()
+  if (!user) return apiError("Não autenticado", 401)
+  if (getUserRole(user) !== "admin") {
+    return apiError("Apenas administradores podem gerenciar usuários", 403)
+  }
+  return null
+}
 
 export async function GET() {
   try {
+    const forbidden = await requireAdmin()
+    if (forbidden) return forbidden
+
     const supabase = createServiceClient()
 
     const { data: authUsers, error: authError } =
@@ -36,6 +49,9 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    const forbidden = await requireAdmin()
+    if (forbidden) return forbidden
+
     const body = await request.json()
 
     if (!body.email || !body.password || !body.name || !body.tribe) {

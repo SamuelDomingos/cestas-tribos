@@ -12,7 +12,11 @@ export interface GCOutput {
   basketGoal: number
   clothesGoal: number
   goals: GoalOutput[]
-  deliveries: DeliveryOutput[]
+  /**
+   * Entregas do GC apenas com o que as somas precisam (`calcStats`).
+   * A lista de GCs não envia fotos nem observações de cada entrega.
+   */
+  deliveries: Pick<DeliveryOutput, "type" | "quantity">[]
 }
 
 export interface GCCreateInput {
@@ -81,11 +85,18 @@ export interface DeliveryOutput {
 }
 
 export interface DeliveryCreateInput {
-  memberId: string
   gcId: string
   type: DeliveryType
+  quantity: number
+  photoUrl: string
+  notes?: string | null
+}
+
+export interface DeliveryUpdateInput {
+  type?: DeliveryType
   quantity?: number
-  photoUrl?: string | null
+  gcId?: string
+  photoUrl?: string
   notes?: string | null
 }
 

@@ -3,11 +3,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase/client"
+import { useQuery } from "@tanstack/react-query"
 import { toast } from "sonner"
+
 import { fetchGCs, createDelivery, uploadDeliveryPhoto } from "@/lib/api"
 import type { GCOutput } from "@/lib/api"
+import { useInvalidateCampaign } from "@/hooks/use-invalidate-campaign"
+import { useSessionUser } from "@/hooks/use-session-user"
 import { deliverySchema, type DeliveryFormData } from "./delivery.schema"
 
 export interface UseAddDeliveryReturn {
@@ -29,12 +31,10 @@ export interface UseAddDeliveryReturn {
 
 export function useAddDelivery(): UseAddDeliveryReturn {
   const [open, setOpen] = useState(false)
-  const [userTribe, setUserTribe] = useState("")
-  const [userRole, setUserRole] = useState("user")
-  const [gcs, setGcs] = useState<GCOutput[]>([])
   const [saving, setSaving] = useState(false)
   const [photoFile, setPhotoFile] = useState<File | null>(null)
-  const router = useRouter()
+  const session = useSessionUser()
+  const invalidate = useInvalidateCampaign()
 
   const form = useForm<DeliveryFormData>({
     resolver: zodResolver(deliverySchema),
@@ -59,27 +59,24 @@ export function useAddDelivery(): UseAddDeliveryReturn {
     setPhotoFile(null)
   }, [open, form])
 
-  // Carrega dados do usuario e GCs ao abrir
+  // GCs compartilham o cache ["gcs"] com as demais telas; busca só ao abrir
+  const gcsQuery = useQuery({
+    queryKey: ["gcs"],
+    queryFn: () => fetchGCs(),
+    enabled: open,
+  })
+
   useEffect(() => {
-    if (!open) return
+    if (gcsQuery.isError) toast.error("Erro ao carregar GCs")
+  }, [gcsQuery.isError])
 
-    ;(async () => {
-      const supabase = createClient()
-      const { data } = await supabase.auth.getUser()
-      const meta = data?.user?.user_metadata ?? {}
-      setUserTribe((meta.tribe as string) || "")
-      setUserRole((meta.role as string) || "user")
-    })()
-
-    fetchGCs()
-      .then((data) => setGcs(data))
-      .catch(() => toast.error("Erro ao carregar GCs"))
-  }, [open])
+  const userTribe = session.data?.tribe ?? ""
+  const userRole: string = session.data?.role ?? "user"
 
   // Filtra GCs pela tribo do usuario
   const filteredGCs = userRole === "admin"
-    ? gcs
-    : gcs.filter((g) => g.tribe === userTribe)
+    ? gcsQuery.data ?? []
+    : (gcsQuery.data ?? []).filter((g) => g.tribe === userTribe)
 
   const gcId = form.watch("gcId")
   const selectedGC = gcId ? filteredGCs.find((g) => g.id === gcId) ?? null : null
@@ -92,36 +89,30 @@ export function useAddDelivery(): UseAddDeliveryReturn {
   const onSubmit = useCallback(async (data: DeliveryFormData) => {
     setSaving(true)
     try {
-      const supabase = createClient()
-      const getusr = await supabase.auth.getUser()
-      const memberId = getusr.data?.user?.id
-
-      if (!memberId) {
-        toast.error("Usuário não autenticado")
-        return
-      }
-
       // Foto obrigatória — validada pelo schema do formulário
       const photoUrl = await uploadDeliveryPhoto(data.photo)
 
+      if (!photoUrl) {
+        throw new Error("Falha ao enviar a foto do comprovante")
+      }
+
       await createDelivery({
-        memberId,
         gcId: data.gcId,
         type: data.type,
         quantity: data.quantity,
-        photoUrl: photoUrl ?? null,
+        photoUrl,
         notes: data.notes || null,
       })
 
       toast.success("Entrega registrada com sucesso!")
-      router.refresh()
+      invalidate()
       setOpen(false)
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao registrar entrega")
     } finally {
       setSaving(false)
     }
-  }, [router])
+  }, [invalidate])
 
   const gcLabel = userRole === "admin" ? "GC (todas tribos)" : `GC (${userTribe})`
 
@@ -130,7 +121,7 @@ export function useAddDelivery(): UseAddDeliveryReturn {
     setOpen,
     userTribe,
     userRole,
-    gcs,
+    gcs: gcsQuery.data ?? [],
     filteredGCs,
     selectedGC,
     saving,

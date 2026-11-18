@@ -1,78 +1,33 @@
 import { NextRequest } from "next/server"
+import { getSessionUser, getUserRole } from "@/lib/auth"
+import { getGoalsAggregate, invalidateCampaignCache } from "@/lib/cache/campaign"
 import { createServiceClient } from "@/lib/supabase/server"
 
 export async function GET(request: NextRequest) {
   try {
+    const user = await getSessionUser()
+    if (!user) {
+      return Response.json(
+        { success: false, error: "Não autenticado" },
+        { status: 401 },
+      )
+    }
+
     const gcId = request.nextUrl.searchParams.get("gcId")
     const tribe = request.nextUrl.searchParams.get("tribe")
     const aggregate = request.nextUrl.searchParams.get("aggregate")
-    const supabase = createServiceClient()
 
     if (aggregate === "true") {
-      const { data: gcs, error } = await supabase
-        .from("gcs")
-        .select("*, goals(*), deliveries(*)")
+      const { data, error } = await getGoalsAggregate()
 
       if (error) {
-        return Response.json({ success: false, error: error.message }, { status: 500 })
+        return Response.json({ success: false, error }, { status: 500 })
       }
 
-      const tribesMap = new Map<string, TribeEntry>()
-      type TribeEntry = {
-        tribe: string
-        gcCount: number
-        basketGoal: number
-        clothesGoal: number
-        basketDel: number
-        clothesDel: number
-        gcs: Array<{
-          id: string
-          name: string
-          avatar: string | null
-          basketGoal: number
-          clothesGoal: number
-          basketDel: number
-          clothesDel: number
-        }>
-      }
-      for (const gc of gcs || []) {
-        const t = gc.tribe || "Sem tribo"
-        if (!tribesMap.has(t)) {
-          tribesMap.set(t, { tribe: t, gcCount: 0, basketGoal: 0, clothesGoal: 0, basketDel: 0, clothesDel: 0, gcs: [] })
-        }
-        const entry = tribesMap.get(t)!
-        entry.gcCount++
-        const goal = gc.goals?.[0]
-        entry.basketGoal += goal?.basketGoal ?? gc.basketGoal ?? 0
-        entry.clothesGoal += goal?.clothesGoal ?? gc.clothesGoal ?? 0
-
-        let gb = 0, gc_c = 0
-        for (const d of gc.deliveries || []) {
-          if (d.type === "BASKET") gb += d.quantity
-          else gc_c += d.quantity
-        }
-        entry.basketDel += gb
-        entry.clothesDel += gc_c
-
-        entry.gcs.push({
-          id: gc.id, name: gc.name, avatar: gc.avatar,
-          basketGoal: goal?.basketGoal ?? gc.basketGoal ?? 0,
-          clothesGoal: goal?.clothesGoal ?? gc.clothesGoal ?? 0,
-          basketDel: gb, clothesDel: gc_c,
-        })
-      }
-
-      const tribes = Array.from(tribesMap.values())
-      const totals = tribes.reduce((acc, t) => ({
-        basketGoal: acc.basketGoal + t.basketGoal,
-        clothesGoal: acc.clothesGoal + t.clothesGoal,
-        basketDel: acc.basketDel + t.basketDel,
-        clothesDel: acc.clothesDel + t.clothesDel,
-      }), { basketGoal: 0, clothesGoal: 0, basketDel: 0, clothesDel: 0 })
-
-      return Response.json({ success: true, data: { tribes, totals } })
+      return Response.json({ success: true, data })
     }
 
+    const supabase = createServiceClient()
     let query = supabase.from("goals").select("*").order("createdAt", { ascending: false })
     if (gcId) query = query.eq("gcId", gcId)
     if (tribe) query = query.eq("tribe", tribe)
@@ -88,6 +43,20 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const user = await getSessionUser()
+    if (!user) {
+      return Response.json(
+        { success: false, error: "Não autenticado" },
+        { status: 401 },
+      )
+    }
+    if (getUserRole(user) !== "admin") {
+      return Response.json(
+        { success: false, error: "Apenas administradores podem criar metas" },
+        { status: 403 },
+      )
+    }
+
     const body = await request.json()
     const supabase = createServiceClient()
 
@@ -105,6 +74,8 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (error) return Response.json({ success: false, error: error.message }, { status: 400 })
+
+    invalidateCampaignCache()
     return Response.json({ success: true, data }, { status: 201 })
   } catch (error) {
     console.error("POST /api/goals error:", error)

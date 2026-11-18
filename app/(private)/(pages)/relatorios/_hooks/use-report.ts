@@ -3,7 +3,6 @@
 import { useQuery } from "@tanstack/react-query"
 import { fetchDeliveries, fetchGCs } from "@/lib/api"
 import { useState, useMemo } from "react"
-import type { DeliveryOutput } from "@/lib/api/types/gcs.types"
 
 export function useReport() {
   const today = new Date()
@@ -17,7 +16,7 @@ export function useReport() {
   const [tribeFilter, setTribeFilter] = useState("all")
 
   const { data: allGcs = [] } = useQuery({
-    queryKey: ["gcs-report"],
+    queryKey: ["gcs"],
     queryFn: () => fetchGCs(),
   })
 

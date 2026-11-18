@@ -23,6 +23,7 @@ export type {
   GoalWithGC,
   DeliveryOutput,
   DeliveryCreateInput,
+  DeliveryUpdateInput,
   DeliveryType,
   TribeGoalSummary,
   GoalsAggregateOutput,

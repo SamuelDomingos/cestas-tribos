@@ -3,7 +3,11 @@
  */
 
 import { createClient } from "@/lib/supabase/client"
-import type { DeliveryOutput, DeliveryCreateInput } from "@/lib/api/types/gcs.types"
+import type {
+  DeliveryOutput,
+  DeliveryCreateInput,
+  DeliveryUpdateInput,
+} from "@/lib/api/types/gcs.types"
 
 /**
  * Lista entregas, opcionalmente filtradas por GC, tribo ou período.
@@ -14,6 +18,9 @@ export async function fetchDeliveries(opts?: {
   startDate?: string
   endDate?: string
   report?: boolean
+  mine?: boolean
+  all?: boolean
+  limit?: number
 }): Promise<DeliveryOutput[]> {
   const params = new URLSearchParams()
   if (opts?.gcId) params.set("gcId", opts.gcId)
@@ -21,6 +28,9 @@ export async function fetchDeliveries(opts?: {
   if (opts?.startDate) params.set("startDate", opts.startDate)
   if (opts?.endDate) params.set("endDate", opts.endDate)
   if (opts?.report) params.set("report", "true")
+  if (opts?.mine) params.set("mine", "true")
+  if (opts?.all) params.set("all", "true")
+  if (opts?.limit) params.set("limit", String(opts.limit))
   const qs = params.toString()
 
   const res = await fetch(`/api/deliveries${qs ? `?${qs}` : ""}`)
@@ -50,6 +60,41 @@ export async function createDelivery(input: DeliveryCreateInput): Promise<Delive
   }
 
   return json.data
+}
+
+export async function fetchMyDeliveries(all = false): Promise<DeliveryOutput[]> {
+  return fetchDeliveries({ mine: !all, all, limit: 200 })
+}
+
+export async function updateDelivery(
+  id: string,
+  input: DeliveryUpdateInput,
+): Promise<DeliveryOutput> {
+  const res = await fetch(`/api/deliveries/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  })
+
+  const json = await res.json()
+
+  if (!json.success) {
+    throw new Error(json.error ?? "Erro ao atualizar entrega")
+  }
+
+  return json.data
+}
+
+export async function deleteDelivery(id: string): Promise<void> {
+  const res = await fetch(`/api/deliveries/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+  })
+
+  const json = await res.json()
+
+  if (!json.success) {
+    throw new Error(json.error ?? "Erro ao excluir entrega")
+  }
 }
 
 /**

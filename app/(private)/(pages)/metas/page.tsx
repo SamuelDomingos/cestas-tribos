@@ -1,28 +1,17 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Plus, Target } from "lucide-react"
 import { MetasOverview } from "./_components/metas-overview"
 import { TribeSection } from "./_components/tribe-section"
 import { useMetas } from "./_hooks/use-gcs"
 import { calcStats, sumStats } from "./_data/utils"
+import { useSessionUser } from "@/hooks/use-session-user"
 import { TRIBE_ORDER } from "@/lib/utils"
 
 export default function MetasPage() {
-  const [userRole, setUserRole] = useState<string>("user")
-
-  useEffect(() => {
-    ;(async () => {
-      const supabase = createClient()
-      const { data } = await supabase.auth.getUser()
-      const meta = data?.user?.user_metadata ?? {}
-      setUserRole((meta.role as string) || "user")
-    })()
-  }, [])
-
-  const isAdmin = userRole === "admin"
+  const session = useSessionUser()
+  const isAdmin = session.data?.role === "admin"
   const { data: gcs = [], isLoading } = useMetas()
 
   const tribesMap = new Map<string, typeof gcs>()

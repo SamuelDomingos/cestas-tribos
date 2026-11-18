@@ -1,41 +1,39 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
-import { createClient } from "@/lib/supabase/client"
+import { useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { FeedCard } from "./_components/feed-card"
 import { TribeCharts } from "./_components/tribe-charts"
 import { ShoppingBag } from "lucide-react"
 import { fetchDeliveries, fetchGoalsAggregate } from "@/lib/api"
+import { useSessionUser } from "@/hooks/use-session-user"
 
 export default function HomeFeed() {
-  const [userTribe, setUserTribe] = useState("")
-  const [userRole, setUserRole] = useState("user")
-
-  useEffect(() => {
-    ;(async () => {
-      const supabase = createClient()
-      const { data } = await supabase.auth.getUser()
-      const meta = data?.user?.user_metadata ?? {}
-      setUserTribe((meta.tribe as string) || "")
-      setUserRole((meta.role as string) || "user")
-    })()
-  }, [])
+  const session = useSessionUser()
+  const userTribe = session.data?.tribe ?? ""
+  const userRole = session.data?.role ?? "user"
 
   const tribeFilter = userRole === "admin" ? undefined : userTribe
 
-  const { data: deliveries = [], isLoading } = useQuery({
+  const deliveriesQuery = useQuery({
     queryKey: ["deliveries", tribeFilter],
     queryFn: () => fetchDeliveries({ tribe: tribeFilter }),
-    enabled: !!userRole,
+    // Busca só depois que a sessão resolve (evita fetch com tribo vazia)
+    enabled: !session.isPending,
   })
+  const deliveries = useMemo(
+    () => deliveriesQuery.data ?? [],
+    [deliveriesQuery.data],
+  )
 
   const { data: aggregate } = useQuery({
     queryKey: ["goals-aggregate"],
     queryFn: fetchGoalsAggregate,
     enabled: userRole === "admin",
   })
+
+  const isLoading = session.isPending || deliveriesQuery.isPending
 
   // Agrupa totais por GC + tipo para calcular o progresso
   const gcTotals = useMemo(() => {

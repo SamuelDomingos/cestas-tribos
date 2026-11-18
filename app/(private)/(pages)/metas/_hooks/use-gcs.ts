@@ -1,20 +1,20 @@
 "use client"
 
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery } from "@tanstack/react-query"
 import { toast } from "sonner"
 import { updateGC } from "@/lib/api/gcs"
-import { useQuery } from "@tanstack/react-query"
 import { fetchGCs } from "@/lib/api/gcs"
 import type { GCUpdateInput } from "@/lib/api/types/gcs.types"
+import { useInvalidateCampaign } from "@/hooks/use-invalidate-campaign"
 
 export function useUpdateGC() {
-  const queryClient = useQueryClient()
+  const invalidate = useInvalidateCampaign()
 
   return useMutation({
     mutationFn: ({ id, ...input }: GCUpdateInput & { id: string }) =>
       updateGC(id, input),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["gcs-metas"] })
+      invalidate()
       toast.success("GC atualizado com sucesso!")
     },
     onError: (error: Error) => {
@@ -25,7 +25,7 @@ export function useUpdateGC() {
 
 export function useMetas() {
   return useQuery({
-    queryKey: ["gcs-metas"],
+    queryKey: ["gcs"],
     queryFn: () => fetchGCs(),
   })
 }
