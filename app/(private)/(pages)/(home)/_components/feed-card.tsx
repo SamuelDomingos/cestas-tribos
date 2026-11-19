@@ -1,11 +1,17 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent } from "@/components/ui/card"
-import { ShoppingBag, Shirt, CalendarDays, Package } from "lucide-react"
+import { ShoppingBag, Shirt, CalendarDays, Package, ZoomIn } from "lucide-react"
 import Image from "next/image"
 import type { FeedItem } from "../_data/feed"
 import { TRIBE_CONFIG, formatBasketValue } from "@/lib/utils"
 
-export function FeedCard({ item }: { item: FeedItem }) {
+export function FeedCard({
+  item,
+  onPhotoClick,
+}: {
+  item: FeedItem
+  onPhotoClick: () => void
+}) {
   const hasPhoto = !!item.photo
   const tribeConfig = TRIBE_CONFIG[item.gc.tribe]
   const tribeImage = tribeConfig?.image ?? null
@@ -189,18 +195,26 @@ export function FeedCard({ item }: { item: FeedItem }) {
         </CardContent>
       )}
 
-      {/* Foto da entrega */}
+      {/* Foto da entrega — clique abre o comprovante com zoom */}
       {hasPhoto && (
         <CardContent className="px-(--card-spacing) pb-(--card-spacing)">
-          <div className="relative aspect-video w-full overflow-hidden rounded-md bg-muted">
+          <button
+            type="button"
+            onClick={onPhotoClick}
+            aria-label={`Ampliar comprovante de ${item.user.name}`}
+            className="group/photo relative block aspect-video w-full cursor-zoom-in overflow-hidden rounded-md bg-muted outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
+          >
             <Image
               src={item.photo}
               alt={`Entrega de ${item.type}`}
               fill
-              className="object-cover"
+              className="object-cover transition-transform group-hover/photo:scale-[1.03]"
               sizes="(max-width: 768px) 100vw, 600px"
             />
-          </div>
+            <span className="absolute top-2 right-2 rounded-md bg-black/55 p-1.5 text-white opacity-0 transition-opacity group-hover/photo:opacity-100 group-focus-visible/photo:opacity-100">
+              <ZoomIn className="size-4" />
+            </span>
+          </button>
         </CardContent>
       )}
     </Card>
